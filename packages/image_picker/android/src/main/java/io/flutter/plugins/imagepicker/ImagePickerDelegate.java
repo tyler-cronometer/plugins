@@ -464,7 +464,8 @@ public class ImagePickerDelegate
       String finalImagePath = imageResizer.resizeImageIfNeeded(path, maxWidth, maxHeight);
       finishWithSuccess(finalImagePath);
     } else {
-      throw new IllegalStateException("Received image from picker that was not requested");
+      Log.i("TAGZ", "Received image from picker that was not requested");
+      //throw new IllegalStateException("Received image from picker that was not requested");
     }
   }
 
