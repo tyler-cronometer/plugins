@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 /**
  * A delegate class doing the heavy lifting for the plugin.
