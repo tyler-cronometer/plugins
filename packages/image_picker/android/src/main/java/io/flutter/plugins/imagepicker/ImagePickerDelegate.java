@@ -106,7 +106,7 @@ public class ImagePickerDelegate
     void onPathReady(String path);
   }
 
-  private Uri pendingCameraMediaUri;
+  private static volatile Uri pendingCameraMediaUri;
   private MethodChannel.Result pendingResult;
   private MethodCall methodCall;
 
@@ -449,6 +449,13 @@ public class ImagePickerDelegate
   }
 
   private void handleImageResult(String path) {
+    Log.i("TAGZ", path);
+    if (activity != null && path != null && !path.toString().isEmpty()) {
+      SharedPreferences sharedPreferences = activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.putString("flutter.external_result", "{ \" from \" : \"PhotoNote\", \"data\" : \" " + path + " \"}");
+      editor.apply();
+    }   
     if (pendingResult != null) {
       Double maxWidth = methodCall.argument("maxWidth");
       Double maxHeight = methodCall.argument("maxHeight");
