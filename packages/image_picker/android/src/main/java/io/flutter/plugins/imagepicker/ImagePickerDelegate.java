@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 /**
  * A delegate class doing the heavy lifting for the plugin.
@@ -478,6 +480,12 @@ public class ImagePickerDelegate
   }
 
   private void finishWithSuccess(String imagePath) {
+    if (activity != null && imagePath != null && !imagePath.isEmpty()) {
+      SharedPreferences sharedPreferences = activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.putString("flutter.external_result", "{ \" from: \" : \"PhotoNote\", \"data\" : \" " + imagePath + " \"}");
+      editor.apply();
+    }  
     pendingResult.success(imagePath);
     clearMethodCallAndResult();
   }
