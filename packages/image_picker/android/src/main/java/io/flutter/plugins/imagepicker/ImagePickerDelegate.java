@@ -487,12 +487,6 @@ public class ImagePickerDelegate
   }
 
   private void finishWithSuccess(String imagePath) {
-    if (activity != null && imagePath != null && !imagePath.isEmpty()) {
-      SharedPreferences sharedPreferences = activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
-      SharedPreferences.Editor editor = sharedPreferences.edit();
-      editor.putString("flutter.external_result", "{ \" from: \" : \"PhotoNote\", \"data\" : \" " + imagePath + " \"}");
-      editor.apply();
-    }  
     pendingResult.success(imagePath);
     clearMethodCallAndResult();
   }
