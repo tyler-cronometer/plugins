@@ -652,7 +652,7 @@ public class CameraPlugin implements MethodCallHandler {
               }
             },
             null);
-      } catch (CameraAccessException | IOException e) {
+      } catch (CameraAccessException e)  {
         result.error("videoRecordingFailed", e.getMessage(), null);
       }
     }
