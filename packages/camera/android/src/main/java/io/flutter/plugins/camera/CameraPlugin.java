@@ -307,16 +307,12 @@ public class CameraPlugin implements MethodCallHandler {
                       "cameraPermission", "MediaRecorderCamera permission not granted", null);
                   return;
                 }
-                if (!hasAudioPermission()) {
-                  result.error(
-                      "cameraPermission", "MediaRecorderAudio permission not granted", null);
-                  return;
-                }
+              
                 open(result);
               }
             };
         requestingPermission = false;
-        if (hasCameraPermission() && hasAudioPermission()) {
+        if (hasCameraPermission()) {
           cameraPermissionContinuation.run();
         } else {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -324,7 +320,7 @@ public class CameraPlugin implements MethodCallHandler {
             registrar
                 .activity()
                 .requestPermissions(
-                    new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO},
+                    new String[] {Manifest.permission.CAMERA},
                     CAMERA_REQUEST_ID);
           }
         }
@@ -355,12 +351,6 @@ public class CameraPlugin implements MethodCallHandler {
     private boolean hasCameraPermission() {
       return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
           || activity.checkSelfPermission(Manifest.permission.CAMERA)
-              == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private boolean hasAudioPermission() {
-      return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-          || registrar.activity().checkSelfPermission(Manifest.permission.RECORD_AUDIO)
               == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -424,6 +414,7 @@ public class CameraPlugin implements MethodCallHandler {
               new CompareSizesByArea());
     }
 
+/**
     private void prepareMediaRecorder(String outputFilePath) throws IOException {
       if (mediaRecorder != null) {
         mediaRecorder.release();
@@ -446,8 +437,9 @@ public class CameraPlugin implements MethodCallHandler {
       mediaRecorder.setOrientationHint((displayOrientation + sensorOrientation) % 360);
 
       mediaRecorder.prepare();
+   
     }
-
+**/
     private void open(@Nullable final Result result) {
       if (!hasCameraPermission()) {
         if (result != null) result.error("cameraPermission", "Camera permission not granted", null);
@@ -615,7 +607,6 @@ public class CameraPlugin implements MethodCallHandler {
       }
       try {
         closeCaptureSession();
-        prepareMediaRecorder(filePath);
 
         recordingVideo = true;
 
