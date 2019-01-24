@@ -1,3 +1,21 @@
+## 4.1.0+1
+
+* This is just a version bump to republish as 4.1.0 was published with some dirty local state.
+
+## 4.1.0
+
+* Added `universalLinksOnly` setting.
+* Updated `launch` to return `Future<bool>`.
+
+## 4.0.3
+
+* Fixed launch url fail for Android: `launch` now assert activity not null and using activity to startActivity.
+* Fixed `WebViewActivity has leaked IntentReceiver` for Android.
+
+## 4.0.2
+
+* Added `closeWebView` function to programmatically close the current WebView.
+
 ## 4.0.1
 
 * Added enableJavaScript field to `launch` to enable javascript in Android WebView.
