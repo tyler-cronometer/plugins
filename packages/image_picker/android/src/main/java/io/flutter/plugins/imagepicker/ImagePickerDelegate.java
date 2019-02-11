@@ -249,16 +249,24 @@ public class ImagePickerDelegate
       return;
     }
 
+    
+    launchPickImageFromGalleryIntent();
+  }
+
+  private void launchPickImageFromGalleryIntent() {
+    
     if (!permissionManager.isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
       permissionManager.askForPermission(
           Manifest.permission.READ_EXTERNAL_STORAGE, REQUEST_EXTERNAL_IMAGE_STORAGE_PERMISSION);
       return;
     }
 
-    launchPickImageFromGalleryIntent();
-  }
-
-  private void launchPickImageFromGalleryIntent() {
+    if (!permissionManager.isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+      permissionManager.askForPermission(
+          Manifest.permission.WRITE_EXTERNAL_STORAGE, REQUEST_EXTERNAL_IMAGE_STORAGE_PERMISSION);
+      return;
+    }
+    
     Intent pickImageIntent = new Intent(Intent.ACTION_GET_CONTENT);
     pickImageIntent.setType("image/*");
 
