@@ -327,7 +327,7 @@ public class ImagePickerDelegate
     if (activity != null) {
       SharedPreferences sharedPreferences = getFlutterPrefs();
       if (pendingCameraMediaUri == null) {
-        pendingCameraMediaUri = sharedPreferences.getString(pathCacheKey);
+        pendingCameraMediaUri = sharedPreferences.getString(pathCacheKey, null);
       }
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(pathCacheKey);
