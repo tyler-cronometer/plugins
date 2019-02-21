@@ -240,6 +240,7 @@ public class ImagePickerDelegate
     intent.putExtra(MediaStore.EXTRA_OUTPUT, videoUri);
     grantUriPermissions(intent, videoUri);
 
+    cacheFilePathInSharedPrefs();
     activity.startActivityForResult(intent, REQUEST_CODE_TAKE_VIDEO_WITH_CAMERA);
   }
 
@@ -304,7 +305,38 @@ public class ImagePickerDelegate
     intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
     grantUriPermissions(intent, imageUri);
 
+    cacheFilePathInSharedPrefs();
+
     activity.startActivityForResult(intent, REQUEST_CODE_TAKE_IMAGE_WITH_CAMERA);
+  }
+
+  private static final String pathCacheKey = "flutter.path_cache"
+
+
+  // We cache this so that if the activities state is wiped, then we can restore from shared prefs rather than using the variable which will have been cleared. 
+  private void cacheFilePathInSharedPrefs() {
+    if (activity != null && pendingCameraMediaUri != null && !pendingCameraMediaUri.toString().isEmpty()) {
+      SharedPreferences sharedPreferences = getFlutterPrefs();
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.putString(pathCacheKey, pendingCameraMediaUri.toString());
+      editor.apply();
+    }   
+  }
+
+  private void restoreFilePathFromCacheIfRequired() {
+    if (activity != null) {
+      SharedPreferences sharedPreferences = getFlutterPrefs();
+      if (pendingCameraMediaUri == null) {
+        pendingCameraMediaUri = sharedPreferences.getString(pathCacheKey);
+      }
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.remove(pathCacheKey);
+      editor.apply();
+    }
+  }
+
+  private SharedPreferences getFlutterPrefs() {
+    return activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
   }
 
   private File createTemporaryWritableImageFile() {
@@ -424,6 +456,7 @@ public class ImagePickerDelegate
   }
 
   private void handleCaptureImageResult(int resultCode) {
+    restoreFilePathFromCacheIfRequired();
     if (resultCode == Activity.RESULT_OK) {
       fileUriResolver.getFullImagePath(
           pendingCameraMediaUri,
@@ -441,6 +474,7 @@ public class ImagePickerDelegate
   }
 
   private void handleCaptureVideoResult(int resultCode) {
+    restoreFilePathFromCacheIfRequired();
     if (resultCode == Activity.RESULT_OK) {
       fileUriResolver.getFullImagePath(
           pendingCameraMediaUri,
@@ -460,7 +494,7 @@ public class ImagePickerDelegate
   private void handleImageResult(String path) {
     Log.i("TAGZ", path);
     if (activity != null && path != null && !path.toString().isEmpty()) {
-      SharedPreferences sharedPreferences = activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
+      SharedPreferences sharedPreferences = getFlutterPrefs();
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.putString("flutter.external_result", "{ \"from\" : \"ImagePicker\", \"data\" : \"" + path + "\"}");
       editor.apply();
