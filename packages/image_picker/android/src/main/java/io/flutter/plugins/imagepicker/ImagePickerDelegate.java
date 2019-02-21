@@ -310,7 +310,7 @@ public class ImagePickerDelegate
     activity.startActivityForResult(intent, REQUEST_CODE_TAKE_IMAGE_WITH_CAMERA);
   }
 
-  private static final String pathCacheKey = "flutter.path_cache"
+  private static final String pathCacheKey = "flutter.path_cache";
 
 
   // We cache this so that if the activities state is wiped, then we can restore from shared prefs rather than using the variable which will have been cleared. 
