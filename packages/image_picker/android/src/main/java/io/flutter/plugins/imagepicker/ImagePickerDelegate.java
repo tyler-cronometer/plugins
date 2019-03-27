@@ -319,7 +319,7 @@ public class ImagePickerDelegate
       SharedPreferences sharedPreferences = getFlutterPrefs();
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.putString(pathCacheKey, pendingCameraMediaUri.toString());
-      editor.apply();
+      editor.commit();
     }   
   }
 
@@ -331,7 +331,7 @@ public class ImagePickerDelegate
       }
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.remove(pathCacheKey);
-      editor.apply();
+      editor.commit();
     }
   }
 
@@ -497,7 +497,7 @@ public class ImagePickerDelegate
       SharedPreferences sharedPreferences = getFlutterPrefs();
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.putString("flutter.external_result", "{ \"from\" : \"ImagePicker\", \"data\" : \"" + path + "\"}");
-      editor.apply();
+      editor.commit();
     }   
     if (pendingResult != null) {
       Double maxWidth = methodCall.argument("maxWidth");
