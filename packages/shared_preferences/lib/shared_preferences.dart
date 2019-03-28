@@ -19,8 +19,8 @@ class SharedPreferences {
 
   static const String _prefix = 'flutter.';
   static SharedPreferences _instance;
-  static Future<SharedPreferences> getInstance() async {
-    if (_instance == null) {
+  static Future<SharedPreferences> getInstance({bool forceReloadFromSystem = false}) async {
+    if (_instance == null || forceReloadFromSystem) {
       final Map<Object, Object> fromSystem =
           // TODO(amirh): remove this on when the invokeMethod update makes it to stable Flutter.
           // https://github.com/flutter/flutter/issues/26431
