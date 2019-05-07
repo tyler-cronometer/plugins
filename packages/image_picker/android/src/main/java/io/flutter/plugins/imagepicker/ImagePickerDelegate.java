@@ -531,7 +531,9 @@ public class ImagePickerDelegate
   }
 
   private void finishWithSuccess(String imagePath) {
-    pendingResult.success(imagePath);
+    if (pendingResult != null) {
+      pendingResult.success(imagePath);
+    }  
     clearMethodCallAndResult();
   }
 
