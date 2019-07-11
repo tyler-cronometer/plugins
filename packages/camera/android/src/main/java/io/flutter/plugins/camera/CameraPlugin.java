@@ -305,28 +305,21 @@ public class CameraPlugin implements MethodCallHandler {
                       "cameraPermission", "MediaRecorderCamera permission not granted", null);
                   return;
                 }
-                if (enableAudio && !hasAudioPermission()) {
-                  result.error(
-                      "cameraPermission", "MediaRecorderAudio permission not granted", null);
-                  return;
-                }
+
                 open(result);
               }
             };
-        if (hasCameraPermission() && (!enableAudio || hasAudioPermission())) {
+        requestingPermission = false;
+        if (hasCameraPermission()) {
           cameraPermissionContinuation.run();
         } else {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            final Activity activity = registrar.activity();
-            if (activity == null) {
-              throw new IllegalStateException("No activity available!");
-            }
-
-            activity.requestPermissions(
-                enableAudio
-                    ? new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}
-                    : new String[] {Manifest.permission.CAMERA},
-                CAMERA_REQUEST_ID);
+            requestingPermission = true;
+            registrar
+                .activity()
+                .requestPermissions(
+                    new String[] {Manifest.permission.CAMERA},
+                    CAMERA_REQUEST_ID);
           }
         }
       } catch (CameraAccessException e) {
@@ -361,17 +354,6 @@ public class CameraPlugin implements MethodCallHandler {
 
       return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
           || activity.checkSelfPermission(Manifest.permission.CAMERA)
-              == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private boolean hasAudioPermission() {
-      final Activity activity = registrar.activity();
-      if (activity == null) {
-        throw new IllegalStateException("No activity available!");
-      }
-
-      return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-          || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
               == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -439,6 +421,7 @@ public class CameraPlugin implements MethodCallHandler {
               new CompareSizesByArea());
     }
 
+/**
     private void prepareMediaRecorder(String outputFilePath) throws IOException {
       if (mediaRecorder != null) {
         mediaRecorder.release();
@@ -458,8 +441,9 @@ public class CameraPlugin implements MethodCallHandler {
       mediaRecorder.setOrientationHint(getMediaOrientation());
 
       mediaRecorder.prepare();
-    }
 
+    }
+**/
     private void open(@Nullable final Result result) {
       if (!hasCameraPermission()) {
         if (result != null) result.error("cameraPermission", "Camera permission not granted", null);
@@ -632,7 +616,6 @@ public class CameraPlugin implements MethodCallHandler {
       }
       try {
         closeCaptureSession();
-        prepareMediaRecorder(filePath);
 
         recordingVideo = true;
 
@@ -680,7 +663,7 @@ public class CameraPlugin implements MethodCallHandler {
               }
             },
             null);
-      } catch (CameraAccessException | IOException e) {
+      } catch (CameraAccessException e)  {
         result.error("videoRecordingFailed", e.getMessage(), null);
       }
     }

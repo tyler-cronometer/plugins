@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
 
 /**
  * A delegate class doing the heavy lifting for the plugin.
@@ -107,7 +110,7 @@ public class ImagePickerDelegate
     void onPathReady(String path);
   }
 
-  private Uri pendingCameraMediaUri;
+  private static volatile Uri pendingCameraMediaUri;
   private MethodChannel.Result pendingResult;
   private MethodCall methodCall;
 
@@ -275,6 +278,7 @@ public class ImagePickerDelegate
     intent.putExtra(MediaStore.EXTRA_OUTPUT, videoUri);
     grantUriPermissions(intent, videoUri);
 
+    cacheFilePathInSharedPrefs();
     activity.startActivityForResult(intent, REQUEST_CODE_TAKE_VIDEO_WITH_CAMERA);
   }
 
@@ -284,16 +288,24 @@ public class ImagePickerDelegate
       return;
     }
 
+
+    launchPickImageFromGalleryIntent();
+  }
+
+  private void launchPickImageFromGalleryIntent() {
+
     if (!permissionManager.isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
       permissionManager.askForPermission(
           Manifest.permission.READ_EXTERNAL_STORAGE, REQUEST_EXTERNAL_IMAGE_STORAGE_PERMISSION);
       return;
     }
 
-    launchPickImageFromGalleryIntent();
-  }
+    if (!permissionManager.isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+      permissionManager.askForPermission(
+          Manifest.permission.WRITE_EXTERNAL_STORAGE, REQUEST_EXTERNAL_IMAGE_STORAGE_PERMISSION);
+      return;
+    }
 
-  private void launchPickImageFromGalleryIntent() {
     Intent pickImageIntent = new Intent(Intent.ACTION_GET_CONTENT);
     pickImageIntent.setType("image/*");
 
@@ -339,7 +351,38 @@ public class ImagePickerDelegate
     intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
     grantUriPermissions(intent, imageUri);
 
+    cacheFilePathInSharedPrefs();
+
     activity.startActivityForResult(intent, REQUEST_CODE_TAKE_IMAGE_WITH_CAMERA);
+  }
+
+  private static final String pathCacheKey = "flutter.path_cache";
+
+
+  // We cache this so that if the activities state is wiped, then we can restore from shared prefs rather than using the variable which will have been cleared.
+  private void cacheFilePathInSharedPrefs() {
+    if (activity != null && pendingCameraMediaUri != null && !pendingCameraMediaUri.toString().isEmpty()) {
+      SharedPreferences sharedPreferences = getFlutterPrefs();
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.putString(pathCacheKey, pendingCameraMediaUri.toString());
+      editor.commit();
+    }
+  }
+
+  private void restoreFilePathFromCacheIfRequired() {
+    if (activity != null) {
+      SharedPreferences sharedPreferences = getFlutterPrefs();
+      if (pendingCameraMediaUri == null) {
+        pendingCameraMediaUri = Uri.parse(sharedPreferences.getString(pathCacheKey, null));
+      }
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.remove(pathCacheKey);
+      editor.commit();
+    }
+  }
+
+  private SharedPreferences getFlutterPrefs() {
+    return activity.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE);
   }
 
   private File createTemporaryWritableImageFile() {
@@ -468,6 +511,7 @@ public class ImagePickerDelegate
   }
 
   private void handleCaptureImageResult(int resultCode) {
+    restoreFilePathFromCacheIfRequired();
     if (resultCode == Activity.RESULT_OK) {
       fileUriResolver.getFullImagePath(
           pendingCameraMediaUri != null
@@ -487,6 +531,7 @@ public class ImagePickerDelegate
   }
 
   private void handleCaptureVideoResult(int resultCode) {
+    restoreFilePathFromCacheIfRequired();
     if (resultCode == Activity.RESULT_OK) {
       fileUriResolver.getFullImagePath(
           pendingCameraMediaUri != null
@@ -506,7 +551,14 @@ public class ImagePickerDelegate
   }
 
   private void handleImageResult(String path, boolean shouldDeleteOriginalIfScaled) {
-    if (methodCall != null) {
+    Log.i("TAGZ", path);
+    if (methodCall != null && activity != null && path != null && !path.toString().isEmpty()) {
+      SharedPreferences sharedPreferences = getFlutterPrefs();
+      SharedPreferences.Editor editor = sharedPreferences.edit();
+      editor.putString("flutter.external_result", "{ \"from\" : \"ImagePicker\", \"data\" : \"" + path + "\"}");
+      editor.commit();
+    }
+    if (pendingResult != null) {
       Double maxWidth = methodCall.argument("maxWidth");
       Double maxHeight = methodCall.argument("maxHeight");
       String finalImagePath = imageResizer.resizeImageIfNeeded(path, maxWidth, maxHeight);
@@ -518,7 +570,8 @@ public class ImagePickerDelegate
         new File(path).delete();
       }
     } else {
-      finishWithSuccess(path);
+      Log.i("TAGZ", "Received image from picker that was not requested");
+      //throw new IllegalStateException("Received image from picker that was not requested");
     }
   }
 
@@ -542,11 +595,9 @@ public class ImagePickerDelegate
   }
 
   private void finishWithSuccess(String imagePath) {
-    if (pendingResult == null) {
-      ImagePickerCache.saveResult(imagePath, null, null);
-      return;
+    if (pendingResult != null) {
+      pendingResult.success(imagePath);
     }
-    pendingResult.success(imagePath);
     clearMethodCallAndResult();
   }
 
