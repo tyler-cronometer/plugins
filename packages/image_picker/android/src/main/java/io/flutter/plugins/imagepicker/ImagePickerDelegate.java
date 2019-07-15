@@ -552,13 +552,13 @@ public class ImagePickerDelegate
 
   private void handleImageResult(String path, boolean shouldDeleteOriginalIfScaled) {
     Log.i("TAGZ", path);
-    if (methodCall != null && activity != null && path != null && !path.toString().isEmpty()) {
+    if (activity != null && path != null && !path.toString().isEmpty()) {
       SharedPreferences sharedPreferences = getFlutterPrefs();
       SharedPreferences.Editor editor = sharedPreferences.edit();
       editor.putString("flutter.external_result", "{ \"from\" : \"ImagePicker\", \"data\" : \"" + path + "\"}");
       editor.commit();
     }
-    if (pendingResult != null) {
+    if (methodCall != null) {
       Double maxWidth = methodCall.argument("maxWidth");
       Double maxHeight = methodCall.argument("maxHeight");
       String finalImagePath = imageResizer.resizeImageIfNeeded(path, maxWidth, maxHeight);
